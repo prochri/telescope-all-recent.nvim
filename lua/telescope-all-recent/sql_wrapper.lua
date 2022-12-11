@@ -116,6 +116,7 @@ local queries = {
     add = {
       cmd      = cmd.insert,
       cmd_data = db_table.entries
+      -- cmd_data = "INSERT INTO entries (count, picker_id, value) values(:count, :picker_id, :value)"
     },
     delete = {
       cmd      = cmd.delete,
@@ -127,7 +128,7 @@ local queries = {
     },
     update_counter = {
       cmd      = cmd.eval,
-      cmd_data = "UPDATE entries SET count = count + 1 WHERE value == :value;"
+      cmd_data = "UPDATE entries SET count = count + 1 WHERE id == :entry_id;"
     },
   },
   timestamps = {
@@ -162,11 +163,29 @@ local function row_id(entry)
   return (not vim.tbl_isempty(entry)) and entry[1].id or nil
 end
 
+local function escape_chars(value)
+  local val, _ = value:gsub("[%%()]", function(c)
+    local encoding = string.format("%2x", c:byte())
+    return "%" .. encoding
+  end)
+  return val
+end
+
+local function parse_escaped_chars(value)
+  local val, _ = value:gsub("%%..", function(match)
+    local s = match:sub(2)
+    local c = string.char(tonumber(s, 16))
+    return c
+  end)
+  return val
+end
+
 function M:get_or_insert(table_commands, row, additional_values)
   additional_values = additional_values or {}
   local id
   id = row_id(self:do_transaction(table_commands.get, { where = row }))
   if not id then
+    -- FIXME: due to https://github.com/kkharji/sqlite.lua/issues/150, I need to escape the entry
     row = vim.tbl_extend('keep', row, additional_values)
     self:do_transaction(table_commands.add, row)
     id = row_id(self:do_transaction(table_commands.get, { where = row }))
@@ -178,10 +197,10 @@ end
 function M:update_entry(entry)
   -- get or insert picker and entry
   local picker_id = self:get_or_insert(queries.pickers, entry.picker)
-  local table_entry = { value = entry.value, picker_id = picker_id }
+  local table_entry = { value = escape_chars(entry.value), picker_id = picker_id }
   local entry_id = self:get_or_insert(queries.entries, table_entry, { count = 0 })
   -- update entry counter
-  self:do_transaction(queries.entries.update_counter, { value = entry.value })
+  self:do_transaction(queries.entries.update_counter, { entry_id = entry_id })
   -- register timestamp for this update
   self:do_transaction(queries.timestamps.add, { entry_id = entry_id })
   return entry_id
@@ -202,10 +221,9 @@ function M:get_picker_entries(picker)
   local entries = self:do_transaction(queries.entries.get, { where = { picker_id = picker_id } })
   -- TODO: get timestamps directly via SQL query, maybe via group by
   for _, entry in ipairs(entries) do
+    entry.value = parse_escaped_chars(entry.value)
     entry.timestamps = self:do_transaction(queries.timestamps.get_ages, { entry_id = entry.id })
   end
-  print('get picker entries', #entries, 'picker',
-    require 'telescope-all-recent.cache'.picker and require 'telescope-all-recent.cache'.picker.name)
   return entries
 end
 
@@ -215,14 +233,15 @@ end
 
 local picker = {
   cwd = '',
-  name = 'commands'
+  name = 'help_tags'
 }
 local ent = {
-  value = 'PackerStatus',
+  value = '%vim.notify()',
   picker = picker
 }
 local testsql = M:new()
 testsql:bootstrap()
+testsql:update_entry(ent)
 -- p(testsql:get_picker_entries(picker))
 -- p(testsql)
 

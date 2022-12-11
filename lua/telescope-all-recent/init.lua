@@ -11,18 +11,73 @@ db_client.init()
 -- TODO: fix TodoTelescope
 local default_config = {
   default = {
-    disable = false,
+    disable = true,
     use_cwd = true,
-    sorting = 'frecency'
+    sorting = 'recent'
   },
+  -- does not make sense for:
+  -- grep string
+  -- live grep (too many results)
+  -- TODO: buffers: might be useful for project/session, but: we must allow preprocesseing the string
+  --
+  -- oldfiles: are per definition already recent. If you need frecency files: use telescope-frecency
+  -- command history: already recent
+  -- search history: already recent
+  --
   pickers = {
     planets = {
       disable = false,
       use_cwd = false
     },
     commands = {
+      disable = false,
       use_cwd = false
     },
+    help_tags = {
+      disable = false,
+      use_cwd = false
+    },
+    find_files = {
+      disable = false,
+      sorting = "frecency"
+    },
+    git_files = {
+      disable = false,
+      sorting = "frecency"
+    },
+    tags = {
+      disable = false
+    },
+    git_commits = {
+      disable = false
+    },
+    git_branches = {
+      disable = false
+    },
+    man_pages = {
+      disable = false,
+      use_cwd = false
+    },
+    vim_options = {
+      disable = false,
+      use_cwd = false
+    },
+    pickers = {
+      disable = false,
+      use_cwd = false
+    },
+    builtin = {
+      disable = false,
+      use_cwd = false
+    },
+    -- some explicitly disabled pickers: I consider them not useful
+    oldfiles = { disable = true },
+    live_grep = { disable = true },
+    grep_string = { disable = true },
+    command_history = { disable = true },
+    search_history = { disable = true },
+    current_buffer_fuzzy_find = { disable = true },
+
   }
 }
 local config = default_config
@@ -75,7 +130,12 @@ local on_new_picker = function()
     return
   end
 
-  -- TODO: pass sorting function
+  local ok, result = pcall(db_client.get_picker_scores, cache.picker, cache.sorting)
+  if not ok then
+    vim.notify('Could not get picker scores for the current picker: ' .. result, vim.log.levels.WARN)
+    cache.reset()
+    return
+  end
   local entry_scores = db_client.get_picker_scores(cache.picker, cache.sorting)
   local scoring_boost_table = {}
   for i, entry_score in ipairs(entry_scores) do
@@ -96,7 +156,10 @@ end
 
 local on_entry_confirm = function(value)
   if cache.picker then
-    db_client.update_entry(cache.picker, value)
+    local ok, result = pcall(db_client.update_entry, cache.picker, value)
+    if not ok then
+      vim.notify('Could not get save selected entry: ' .. value .. ', error: ' .. result, vim.log.levels.WARN)
+    end
     cache.reset()
   end
 end

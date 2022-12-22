@@ -3,23 +3,12 @@ if not has_sqlite then
   error("This plugin requires sqlite.lua (https://github.com/tami5/sqlite.lua) " .. tostring(sqlite))
 end
 
--- TODO: pass in max_timestamps from db.lua
 local MAX_TIMESTAMPS = 10
 
 local db_table      = {}
 db_table.pickers    = "pickers"
 db_table.entries    = "entries"
 db_table.timestamps = "timestamps"
-
---
-
--- TODO: NEXT!
--- extend substr sorter to have modes:
--- when current string is prefixed by `:foo`, results are tag_names that come from tags/workspaces table. (if `:foo ` token is incomplete it is ignored)
--- when a complete workspace tag is matched ':foobar:', results are indexed_files filtered by if their parent_dir is a descendant of the workspace_dir
--- a recursive scan_dir() result is added to the  :foobar: filter results; any non-indexed_files are given a score of zero, and are alphabetically sorted below the indexed_results
-
--- make tab completion for tab_names in insert mode`:foo|` state: cycles through available options
 
 local M = {}
 
@@ -32,16 +21,14 @@ function M:new()
   return o
 end
 
-function M:bootstrap(db_root)
+function M:bootstrap(db_config)
   if self.db then return end
+  p(db_config)
 
-  -- opts = opts or {}
-  -- self.max_entries = opts.max_entries or 2000
-
+  -- FIXME: windows paths
+  local dbfile = db_config.folder .. '/' .. db_config.file
   -- create the db if it doesn't exist
-  db_root = db_root or os.getenv('HOME') -- TODO: move it to data home again
-  local db_filename = db_root .. "/telescope-recent.sqlite3"
-  self.db = sqlite:open(db_filename)
+  self.db = sqlite:open(dbfile)
   if not self.db then
     vim.notify("Telescope-Frecency: error in opening DB", vim.log.levels.ERROR)
     return
@@ -163,6 +150,8 @@ local function row_id(entry)
   return (not vim.tbl_isempty(entry)) and entry[1].id or nil
 end
 
+-- next two needed due to https://github.com/kkharji/sqlite.lua/issues/150
+-- they replace some chars with their hex representation prefixed with a precent sign
 local function escape_chars(value)
   local val, _ = value:gsub("[%%()]", function(c)
     local encoding = string.format("%2x", c:byte())
@@ -185,7 +174,6 @@ function M:get_or_insert(table_commands, row, additional_values)
   local id
   id = row_id(self:do_transaction(table_commands.get, { where = row }))
   if not id then
-    -- FIXME: due to https://github.com/kkharji/sqlite.lua/issues/150, I need to escape the entry
     row = vim.tbl_extend('keep', row, additional_values)
     self:do_transaction(table_commands.add, row)
     id = row_id(self:do_transaction(table_commands.get, { where = row }))
@@ -239,9 +227,9 @@ local ent = {
   value = '%vim.notify()',
   picker = picker
 }
-local testsql = M:new()
-testsql:bootstrap()
-testsql:update_entry(ent)
+-- local testsql = M:new()
+-- testsql:bootstrap()
+-- testsql:update_entry(ent)
 -- p(testsql:get_picker_entries(picker))
 -- p(testsql)
 

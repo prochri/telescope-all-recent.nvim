@@ -17,8 +17,7 @@ local recency_modifier = {
 
 local sql_wrapper = nil
 
--- TODO: rewrite and
--- actually validate the db at some point
+-- TODO: rewrite and actually validate the db at some point
 local function validate_db(safe_mode)
   if not sql_wrapper then return {} end
 
@@ -56,26 +55,25 @@ local function validate_db(safe_mode)
   end
 end
 
--- TODO: make init params a keyed table and allow configuration for the user
-local function init(db_root, safe_mode, auto_validate)
+local function init(db_config)
   if sql_wrapper then return end
   sql_wrapper = sqlwrap:new()
-  sql_wrapper:bootstrap(db_root)
+  sql_wrapper:bootstrap(db_config)
 
-  if auto_validate then
-    validate_db(safe_mode)
-  end
+  -- if auto_validate then
+  --   validate_db(safe_mode)
+  -- end
 end
 
 local calculate_score = {}
 function calculate_score.recent(_, timestamps)
-  local max_timestamp = -1
+  local min_age = nil
   for _, ts in ipairs(timestamps) do
-    if ts.age > max_timestamp then
-      max_timestamp = ts.age
+    if not min_age or ts.age < min_age then
+      min_age = ts.age
     end
   end
-  return max_timestamp
+  return -min_age
 end
 
 function calculate_score.frecency(frequency, timestamps)

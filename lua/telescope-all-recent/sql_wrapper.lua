@@ -2,6 +2,10 @@ local has_sqlite, sqlite = pcall(require, "sqlite")
 if not has_sqlite then
   error("This plugin requires sqlite.lua (https://github.com/tami5/sqlite.lua) " .. tostring(sqlite))
 end
+local has_plenary, Path = pcall(require, "plenary.path")
+if not has_plenary then
+  error("This plugin requires plenary.nvim " .. tostring(Path))
+end
 
 local MAX_TIMESTAMPS = 10
 
@@ -23,10 +27,8 @@ end
 
 function M:bootstrap(db_config)
   if self.db then return end
-  p(db_config)
 
-  -- FIXME: windows paths
-  local dbfile = db_config.folder .. '/' .. db_config.file
+  local dbfile = (Path:new(db_config.folder) / db_config.file):absolute()
   -- create the db if it doesn't exist
   self.db = sqlite:open(dbfile)
   if not self.db then

@@ -1,85 +1,8 @@
 local cache = require "telescope-all-recent.cache"
-package.loaded["telescope-all-recent.frecency"] = nil
 local db_client = require "telescope-all-recent.frecency"
 local override = require "telescope-all-recent.override"
 
-local default_config = {
-  default = {
-    disable = true,
-    use_cwd = true,
-    sorting = 'recent'
-  },
-  -- does not make sense for:
-  -- grep string
-  -- live grep (too many results)
-  -- TODO: buffers: might be useful for project/session, but: we must allow preprocesseing the string
-  --
-  -- oldfiles: are per definition already recent. If you need frecency files: use telescope-frecency
-  -- command history: already recent
-  -- search history: already recent
-  --
-  pickers = {
-    -- pickers explicitly enabled
-    -- not using cwd
-    man_pages = {
-      disable = false,
-      use_cwd = false
-    },
-    vim_options = {
-      disable = false,
-      use_cwd = false
-    },
-    pickers = {
-      disable = false,
-      use_cwd = false
-    },
-    builtin = {
-      disable = false,
-      use_cwd = false
-    },
-    planets = {
-      disable = false,
-      use_cwd = false
-    },
-    commands = {
-      disable = false,
-      use_cwd = false
-    },
-    help_tags = {
-      disable = false,
-      use_cwd = false
-    },
-    -- using cwd
-    find_files = {
-      disable = false,
-      sorting = "frecency"
-    },
-    git_files = {
-      disable = false,
-      sorting = "frecency"
-    },
-    tags = {
-      disable = false
-    },
-    git_commits = {
-      disable = false
-    },
-    git_branches = {
-      disable = false
-    },
-    -- some explicitly disabled pickers: I consider them not useful.
-    oldfiles = { disable = true },
-    live_grep = { disable = true },
-    grep_string = { disable = true },
-    command_history = { disable = true },
-    search_history = { disable = true },
-    current_buffer_fuzzy_find = { disable = true },
-  },
-  database = {
-    folder = vim.fn.stdpath("data"),
-    file = "telescope-all-recent.sqlite3",
-  }
-}
+local default_config = require 'telescope-all-recent.default'
 local config = default_config
 
 local function establish_picker_settings()
@@ -94,10 +17,16 @@ local function establish_picker_settings()
   -- disable option
   local picker_config = config.pickers[name]
   local function get_config(value)
+    local config_value
     if picker_config and picker_config[value] ~= nil then
-      return picker_config[value]
+      config_value = picker_config[value]
+    else
+      config_value = config.default[value]
     end
-    return config.default[value]
+    if type(config_value) == "function" then
+      config_value = config_value(cache.picker_info)
+    end
+    return config_value
   end
 
   if get_config('disable') then
@@ -164,14 +93,10 @@ end
 
 local M = {}
 function M.setup(opts)
-  config = default_config
   config = vim.tbl_deep_extend('force', default_config, opts)
   db_client.init(config.database)
   override.restore_original()
   override.override(on_new_picker, on_entry_confirm)
 end
-
-M.setup {}
--- override.restore_original()
 
 return M

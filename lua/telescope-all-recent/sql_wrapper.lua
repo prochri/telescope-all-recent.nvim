@@ -27,6 +27,7 @@ end
 
 function M:bootstrap(db_config)
   if self.db then return end
+  MAX_TIMESTAMPS = db_config.max_timestamps or MAX_TIMESTAMPS
 
   local dbfile = (Path:new(db_config.folder) / db_config.file):absolute()
   -- create the db if it doesn't exist

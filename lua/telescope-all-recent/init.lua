@@ -58,14 +58,14 @@ local on_new_picker = function()
 
   local ok, entry_scores = pcall(db_client.get_picker_scores, cache.picker, cache.sorting)
   if not ok then
-    vim.notify('Could not get picker scores for the current picker: ' .. result, vim.log.levels.WARN)
+    vim.notify('Could not get picker scores for the current picker: ' .. cache.picker.name, vim.log.levels.WARN)
     cache.reset()
     return
   end
   -- local entry_scores = db_client.get_picker_scores(cache.picker, cache.sorting)
   local scoring_boost_table = {}
   for i, entry_score in ipairs(entry_scores) do
-    scoring_boost_table[entry_score.entry.value] = (#entry_scores - i + 1) * 0.000001
+    scoring_boost_table[entry_score.entry.value] = (#entry_scores - i + 1) * config.scoring.boost_factor
   end
   cache.sorting_function_generator = function(original_sorting_function)
     return function(sorter, prompt, line)
@@ -94,9 +94,13 @@ end
 local M = {}
 function M.setup(opts)
   config = vim.tbl_deep_extend('force', default_config, opts)
-  db_client.init(config.database)
+  db_client.init(config)
   override.restore_original()
   override.override(on_new_picker, on_entry_confirm)
+end
+
+function M.config()
+  return config
 end
 
 return M

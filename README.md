@@ -1,9 +1,9 @@
 # telescope-all-recent.nvim
 (F)recency sorting for all [Telescope](https://github.com/nvim-telescope/telescope.nvim) pickers.
 
-Very hacky solution, overriding telescope internals to provide recency/frecency sorting for any picker.
+![demo](https://user-images.githubusercontent.com/38609485/210369490-98c0fecc-ad96-4efa-9360-55b012d70eb6.gif)
 
-For now, only builtin pickers are supported.
+Very hacky solution, overriding telescope internals to provide recency/frecency sorting for any picker.
 
 
 ## Requirements
@@ -32,7 +32,42 @@ Make sure to load this after telescope.
 
 ## Configuration
 
-The default configuration should come with sane values, so you can get started right away! If you want to change, here is how:
+The default configuration should come with sane values, so you can get started right away! 
+The following builtin pickers are activated by default:
+- man_pages
+- vim_options
+- pickers
+- builtin
+- planets
+- commands
+- help_tags
+- find_files
+- git_files
+- tags
+- git_commits
+- git_branches
+
+There are two different sorting algorithms available. They can be set for each picker individually:
+- **recent**: show the most recently selected items first.
+- **frecent**: consider both the frequency and recency of the items (see [telescope-frecency.nvim](https://github.com/nvim-telescope/telescope-frecency.nvim))
+
+To use all-recent for a telescope extension, find out the extensions name and picker method,
+for example using `print(vim.inspect(require'telescope'.extensions))` and then add this in the plugins configuration:
+```lua
+{
+  pickers = {
+    // ...
+    ['extension_name#extension_method'] = {
+      disable = false,
+      use_cwd = false,
+      sorting = 'recent',
+    }
+  }
+}
+```
+
+If you want to change some settings or add pickers, here is how:
+
 ```lua
 require'telescope-all-recent'.setup{
   database = {
@@ -53,7 +88,7 @@ require'telescope-all-recent'.setup{
     boost_factor = 0.0001
   },
   default = {
-    disable = true, -- disable all-recent
+    disable = true, -- disable any unkown pickers (recommended)
     use_cwd = true, -- differentiate scoring for each picker based on cwd
     sorting = 'recent' -- sorting: options: 'recent' and 'frecency'
   },
@@ -73,8 +108,20 @@ require'telescope-all-recent'.setup{
 }
 ```
 
-The default config values can be found [here](./lua/telescope-all-recent/default.lua)
+The default config values can be found [here](./lua/telescope-all-recent/default.lua).
 
+## How it works
+
+Telescope does not provide the relevant hooks/callback functions to build this nicely.
+So, this plugin first stores some of the original functions and then overrides them:
+
+- calls to `telescope.builtin` and `telescope.extensions[extension_name]` are overriden. This allows us to get the name of the called picker.
+- the `Picker:new` is replaced. We want to get all information we can about what picker we are dealing with.
+- the `Sorter:new` function is replaced to allow us to insert a custom sorting function, which boosts the scores of (f)recent items by a small amount.
+- the `action.select_default.__call` allows us to see, which result is finally selected and add it to the database.
+
+All of this is done in [override.lua](./lua/telescope-all-recent/override.lua).
+  
 
 ## Inspiration
 

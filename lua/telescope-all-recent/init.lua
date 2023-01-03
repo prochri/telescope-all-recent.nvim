@@ -46,7 +46,6 @@ local function establish_picker_settings()
 
   -- sorting options
   cache.sorting = get_config('sorting')
-  print(cache.sorting)
 end
 
 local on_new_picker = function()
@@ -74,7 +73,6 @@ local on_new_picker = function()
         score = score - (scoring_boost_table[line] or 0)
         if score < 0 then score = 0 end
       end
-      -- print("new score", score, "item", line, "scoring boost", scoring_boost_table[line])
       return score
     end
   end

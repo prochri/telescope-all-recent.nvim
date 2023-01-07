@@ -143,7 +143,9 @@ end
 local function override_action_select_default(on_entry_confirm)
   getmetatable(actions.select_default).__call = function(self, prompt_bufnr)
     local entry = action_state.get_selected_entry()
-    on_entry_confirm(entry.ordinal)
+    if type(entry) == "table" then
+      on_entry_confirm(entry.ordinal)
+    end
     return cache.original.action_select_default(self, prompt_bufnr)
   end
 end

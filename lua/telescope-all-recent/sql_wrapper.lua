@@ -156,7 +156,7 @@ end
 -- next two needed due to https://github.com/kkharji/sqlite.lua/issues/150
 -- they replace some chars with their hex representation prefixed with a precent sign
 local function escape_chars(value)
-  local val, _ = value:gsub("[%%()]", function(c)
+  local val, _ = value:gsub("[%%()<>]", function(c)
     local encoding = string.format("%2x", c:byte())
     return "%" .. encoding
   end)

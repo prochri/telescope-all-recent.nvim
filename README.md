@@ -31,7 +31,7 @@ use {
 Make sure to load this after telescope.
 
 If you are creating keybindings to telescope via lua functions,
-either load this plugin first and then bind the function, or wrap the call in another function (see #2):
+either load this plugin first and then bind the function, or wrap the call in another function (see [#2](https://github.com/prochri/telescope-all-recent.nvim/issues/2)):
 ```lua
 -- This may bind to old telescope function depending on your load order:
 -- vim.keymap.set('n', '<leader>f', require'telescope'.builtins.find_files)

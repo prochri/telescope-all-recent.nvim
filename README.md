@@ -30,6 +30,15 @@ use {
 
 Make sure to load this after telescope.
 
+If you are creating keybindings to telescope via lua functions,
+either load this plugin first and then bind the function, or wrap the call in another function (see #2):
+```lua
+-- This may bind to old telescope function depending on your load order:
+-- vim.keymap.set('n', '<leader>f', require'telescope'.builtins.find_files)
+-- So: better wrap it in a function:
+vim.keymap.set('n', '<leader>f', function() require'telescope'.builtins.find_files() end)
+```
+
 ## Configuration
 
 The default configuration should come with sane values, so you can get started right away! 

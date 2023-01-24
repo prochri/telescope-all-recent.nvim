@@ -136,7 +136,7 @@ local queries = {
     },
     get_ages = {
       cmd      = cmd.eval,
-      cmd_data = "SELECT id, entry_id, CAST((julianday('now') - julianday(timestamp)) * 24 * 60 AS INTEGER) AS age FROM timestamps WHERE entry_id == :entry_id;"
+      cmd_data = "SELECT id, entry_id, CAST((julianday('now') - julianday(timestamp)) * 24 * 60 AS FLOAT) AS age FROM timestamps WHERE entry_id == :entry_id;"
     },
     delete_before_id = {
       cmd      = cmd.eval,

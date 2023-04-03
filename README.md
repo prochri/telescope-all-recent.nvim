@@ -19,7 +19,7 @@ Via [packer.nvim](https://github.com/wbthomason/packer.nvim):
 
 ```lua
 use {
-  'prochri/telescope-all-recent.nvim'
+  'prochri/telescope-all-recent.nvim',
   config = function()
     require'telescope-all-recent'.setup{
       -- your config goes here

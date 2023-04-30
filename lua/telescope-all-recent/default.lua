@@ -11,14 +11,14 @@ local default_config = {
       [3] = { age = 4320, value = 60 }, -- past 3 days
       [4] = { age = 10080, value = 40 }, -- past week
       [5] = { age = 43200, value = 20 }, -- past month
-      [6] = { age = 129600, value = 10 } -- past 90 days
+      [6] = { age = 129600, value = 10 }, -- past 90 days
     },
-    boost_factor = 0.0001
+    boost_factor = 0.0001,
   },
   default = {
     disable = true,
     use_cwd = true,
-    sorting = 'recent'
+    sorting = "recent",
   },
   -- does not make sense for:
   -- grep string
@@ -34,49 +34,49 @@ local default_config = {
     -- not using cwd
     man_pages = {
       disable = false,
-      use_cwd = false
+      use_cwd = false,
     },
     vim_options = {
       disable = false,
-      use_cwd = false
+      use_cwd = false,
     },
     pickers = {
       disable = false,
-      use_cwd = false
+      use_cwd = false,
     },
     builtin = {
       disable = false,
-      use_cwd = false
+      use_cwd = false,
     },
     planets = {
       disable = false,
-      use_cwd = false
+      use_cwd = false,
     },
     commands = {
       disable = false,
-      use_cwd = false
+      use_cwd = false,
     },
     help_tags = {
       disable = false,
-      use_cwd = false
+      use_cwd = false,
     },
     -- using cwd
     find_files = {
       disable = false,
-      sorting = "frecency"
+      sorting = "frecency",
     },
     git_files = {
       disable = false,
-      sorting = "frecency"
+      sorting = "frecency",
     },
     tags = {
-      disable = false
+      disable = false,
     },
     git_commits = {
-      disable = false
+      disable = false,
     },
     git_branches = {
-      disable = false
+      disable = false,
     },
     -- some explicitly disabled pickers: I consider them not useful.
     oldfiles = { disable = true },

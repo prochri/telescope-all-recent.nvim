@@ -9,9 +9,9 @@ end
 
 local MAX_TIMESTAMPS = 10
 
-local db_table      = {}
-db_table.pickers    = "pickers"
-db_table.entries    = "entries"
+local db_table = {}
+db_table.pickers = "pickers"
+db_table.entries = "entries"
 db_table.timestamps = "timestamps"
 
 local M = {}
@@ -26,7 +26,9 @@ function M:new()
 end
 
 function M:bootstrap(db_config)
-  if self.db then return end
+  if self.db then
+    return
+  end
   MAX_TIMESTAMPS = db_config.max_timestamps or MAX_TIMESTAMPS
 
   local dbfile = (Path:new(db_config.folder) / db_config.file):absolute()
@@ -43,21 +45,21 @@ function M:bootstrap(db_config)
 
     -- create tables if they don't exist
     self.db:create(db_table.pickers, {
-      id   = { "INTEGER", "PRIMARY", "KEY" },
+      id = { "INTEGER", "PRIMARY", "KEY" },
       name = "TEXT",
-      cwd  = "TEXT",
+      cwd = "TEXT",
     })
     self.db:create(db_table.entries, {
-      id        = { "INTEGER", "PRIMARY", "KEY" },
-      value     = 'TEXT',
+      id = { "INTEGER", "PRIMARY", "KEY" },
+      value = "TEXT",
       picker_id = "INTEGER",
-      count     = "INTEGER",
+      count = "INTEGER",
     })
 
     self.db:create(db_table.timestamps, {
-      id        = { "INTEGER", "PRIMARY", "KEY" },
-      entry_id  = "INTEGER",
-      timestamp = "REAL"
+      id = { "INTEGER", "PRIMARY", "KEY" },
+      entry_id = "INTEGER",
+      timestamp = "REAL",
       -- FOREIGN KEY(entry_id)  REFERENCES files(id)
     })
   end
@@ -71,10 +73,18 @@ end
 function M:do_transaction(t, params)
   return self.db:with_open(function(db)
     local case = {
-      [1] = function() return db:select(t.cmd_data, params) end,
-      [2] = function() return db:insert(t.cmd_data, params) end,
-      [3] = function() return db:delete(t.cmd_data, params) end,
-      [4] = function() return db:eval(t.cmd_data, params) end,
+      [1] = function()
+        return db:select(t.cmd_data, params)
+      end,
+      [2] = function()
+        return db:insert(t.cmd_data, params)
+      end,
+      [3] = function()
+        return db:delete(t.cmd_data, params)
+      end,
+      [4] = function()
+        return db:eval(t.cmd_data, params)
+      end,
     }
     return case[t.cmd]()
   end)
@@ -84,63 +94,63 @@ local cmd = {
   select = 1,
   insert = 2,
   delete = 3,
-  eval   = 4,
+  eval = 4,
 }
 
 local queries = {
   pickers = {
     add = {
-      cmd      = cmd.insert,
-      cmd_data = db_table.pickers
+      cmd = cmd.insert,
+      cmd_data = db_table.pickers,
     },
     delete = {
-      cmd      = cmd.delete,
-      cmd_data = db_table.pickers
+      cmd = cmd.delete,
+      cmd_data = db_table.pickers,
     },
     get = {
-      cmd      = cmd.select,
-      cmd_data = db_table.pickers
+      cmd = cmd.select,
+      cmd_data = db_table.pickers,
     },
   },
   entries = {
     add = {
-      cmd      = cmd.insert,
-      cmd_data = db_table.entries
+      cmd = cmd.insert,
+      cmd_data = db_table.entries,
       -- cmd_data = "INSERT INTO entries (count, picker_id, value) values(:count, :picker_id, :value)"
     },
     delete = {
-      cmd      = cmd.delete,
-      cmd_data = db_table.entries
+      cmd = cmd.delete,
+      cmd_data = db_table.entries,
     },
     get = {
-      cmd      = cmd.select,
-      cmd_data = db_table.entries
+      cmd = cmd.select,
+      cmd_data = db_table.entries,
     },
     update_counter = {
-      cmd      = cmd.eval,
-      cmd_data = "UPDATE entries SET count = count + 1 WHERE id == :entry_id;"
+      cmd = cmd.eval,
+      cmd_data = "UPDATE entries SET count = count + 1 WHERE id == :entry_id;",
     },
   },
   timestamps = {
     add = {
-      cmd      = cmd.eval,
-      cmd_data = "INSERT INTO timestamps (entry_id, timestamp) values(:entry_id, julianday('now'));"
+      cmd = cmd.eval,
+      cmd_data = "INSERT INTO timestamps (entry_id, timestamp) values(:entry_id, julianday('now'));",
     },
     delete = {
-      cmd      = cmd.delete,
-      cmd_data = db_table.timestamps
+      cmd = cmd.delete,
+      cmd_data = db_table.timestamps,
     },
     get = {
-      cmd      = cmd.select,
+      cmd = cmd.select,
       cmd_data = db_table.timestamps,
     },
     get_ages = {
-      cmd      = cmd.eval,
-      cmd_data = "SELECT id, entry_id, CAST((julianday('now') - julianday(timestamp)) * 24 * 60 AS FLOAT) AS age FROM timestamps WHERE entry_id == :entry_id;"
+      cmd = cmd.eval,
+      cmd_data = "SELECT id, entry_id, CAST((julianday('now') - julianday(timestamp)) * 24 * 60 AS FLOAT) AS age FROM timestamps WHERE entry_id == :entry_id;",
     },
     delete_before_id = {
-      cmd      = cmd.eval,
-      cmd_data = "DELETE FROM timestamps WHERE id < :id and entry_id == :entry_id;"
+      cmd = cmd.eval,
+      cmd_data = "DELETE FROM timestamps WHERE id < :id and entry_id == :entry_id;",
     },
   },
 }
@@ -177,7 +187,7 @@ function M:get_or_insert(table_commands, row, additional_values)
   local id
   id = row_id(self:do_transaction(table_commands.get, { where = row }))
   if not id then
-    row = vim.tbl_extend('keep', row, additional_values)
+    row = vim.tbl_extend("keep", row, additional_values)
     self:do_transaction(table_commands.add, row)
     id = row_id(self:do_transaction(table_commands.get, { where = row }))
   end
@@ -208,7 +218,9 @@ end
 
 function M:get_picker_entries(picker)
   local picker_id = row_id(self:do_transaction(queries.pickers.get, { where = picker }))
-  if not picker_id then return {} end
+  if not picker_id then
+    return {}
+  end
   local entries = self:do_transaction(queries.entries.get, { where = { picker_id = picker_id } })
   -- TODO: get timestamps directly via SQL query, maybe via group by
   for _, entry in ipairs(entries) do
@@ -219,22 +231,21 @@ function M:get_picker_entries(picker)
 end
 
 function M:trim_picker_entries(picker_id)
-  vim.notify('trimming picker entries not supported yet', vim.log.levels.WARN)
+  vim.notify("trimming picker entries not supported yet", vim.log.levels.WARN)
 end
 
 local picker = {
-  cwd = '',
-  name = 'help_tags'
+  cwd = "",
+  name = "help_tags",
 }
 local ent = {
-  value = '%vim.notify()',
-  picker = picker
+  value = "%vim.notify()",
+  picker = picker,
 }
 -- local testsql = M:new()
 -- testsql:bootstrap()
 -- testsql:update_entry(ent)
 -- p(testsql:get_picker_entries(picker))
 -- p(testsql)
-
 
 return M

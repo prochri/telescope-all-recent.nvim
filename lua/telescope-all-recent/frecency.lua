@@ -1,5 +1,5 @@
 package.loaded["telescope-all-recent.sql_wrapper"] = nil
-local sqlwrap                                      = require("telescope-all-recent.sql_wrapper")
+local sqlwrap = require("telescope-all-recent.sql_wrapper")
 -- local scandir                                      = require("plenary.scandir").scan_dir
 
 local MAX_TIMESTAMPS = 10
@@ -11,7 +11,7 @@ local recency_modifier = {
   [3] = { age = 4320, value = 60 }, -- past 3 days
   [4] = { age = 10080, value = 40 }, -- past week
   [5] = { age = 43200, value = 20 }, -- past month
-  [6] = { age = 129600, value = 10 } -- past 90 days
+  [6] = { age = 129600, value = 10 }, -- past 90 days
 }
 
 local sql_wrapper = nil
@@ -57,7 +57,9 @@ local sql_wrapper = nil
 -- end
 
 local function init(config)
-  if sql_wrapper then return end
+  if sql_wrapper then
+    return
+  end
   sql_wrapper = sqlwrap:new()
   sql_wrapper:bootstrap(config.database)
   recency_modifier = config.scoring.recency_modifier
@@ -95,12 +97,14 @@ end
 local function update_entry(picker, value)
   sql_wrapper:update_entry({
     value = value,
-    picker = picker
+    picker = picker,
   })
 end
 
 local function get_picker_scores(picker, sorting)
-  if not sql_wrapper then return {} end
+  if not sql_wrapper then
+    return {}
+  end
   local entries = sql_wrapper:get_picker_entries(picker)
 
   local scores = {}
@@ -108,11 +112,13 @@ local function get_picker_scores(picker, sorting)
     local score = entry.count == 0 and 0 or calculate_score[sorting](entry.count, entry.timestamps)
     table.insert(scores, {
       entry = entry,
-      score = score
+      score = score,
     })
   end
 
-  table.sort(scores, function(a, b) return a.score > b.score end)
+  table.sort(scores, function(a, b)
+    return a.score > b.score
+  end)
   return scores
 end
 
@@ -128,8 +134,8 @@ end
 -- get_picker_scores(picker)
 
 return {
-  init              = init,
+  init = init,
   get_picker_scores = get_picker_scores,
-  update_entry      = update_entry,
-  validate          = validate_db,
+  update_entry = update_entry,
+  validate = validate_db,
 }

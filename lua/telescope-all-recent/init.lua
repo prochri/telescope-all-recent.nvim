@@ -1,8 +1,8 @@
-local cache = require "telescope-all-recent.cache"
-local db_client = require "telescope-all-recent.frecency"
-local override = require "telescope-all-recent.override"
+local cache = require("telescope-all-recent.cache")
+local db_client = require("telescope-all-recent.frecency")
+local override = require("telescope-all-recent.override")
 
-local default_config = require 'telescope-all-recent.default'
+local default_config = require("telescope-all-recent.default")
 local config = default_config
 
 local function establish_picker_settings()
@@ -29,23 +29,23 @@ local function establish_picker_settings()
     return config_value
   end
 
-  if get_config('disable') then
+  if get_config("disable") then
     cache.reset()
     return
   end
 
   -- cwd options
   if not cwd then
-    if get_config('use_cwd') then
+    if get_config("use_cwd") then
       cwd = vim.fn.getcwd()
     else
-      cwd = ''
+      cwd = ""
     end
   end
   cache.picker = { name = name, cwd = cwd }
 
   -- sorting options
-  cache.sorting = get_config('sorting')
+  cache.sorting = get_config("sorting")
 end
 
 local on_new_picker = function()
@@ -57,7 +57,7 @@ local on_new_picker = function()
 
   local ok, entry_scores = pcall(db_client.get_picker_scores, cache.picker, cache.sorting)
   if not ok then
-    vim.notify('Could not get picker scores for the current picker: ' .. cache.picker.name, vim.log.levels.WARN)
+    vim.notify("Could not get picker scores for the current picker: " .. cache.picker.name, vim.log.levels.WARN)
     cache.reset()
     return
   end
@@ -71,7 +71,9 @@ local on_new_picker = function()
       local score = original_sorting_function(sorter, prompt, line)
       if score > 0 then
         score = score - (scoring_boost_table[line] or 0)
-        if score < 0 then score = 0 end
+        if score < 0 then
+          score = 0
+        end
       end
       return score
     end
@@ -82,7 +84,7 @@ local on_entry_confirm = function(value)
   if cache.picker then
     local ok, result = pcall(db_client.update_entry, cache.picker, value)
     if not ok then
-      vim.notify('Could not get save selected entry: ' .. value .. ', error: ' .. result, vim.log.levels.WARN)
+      vim.notify("Could not get save selected entry: " .. value .. ", error: " .. result, vim.log.levels.WARN)
     end
     cache.reset()
   end
@@ -91,7 +93,7 @@ end
 
 local M = {}
 function M.setup(opts)
-  config = vim.tbl_deep_extend('force', default_config, opts)
+  config = vim.tbl_deep_extend("force", default_config, opts)
   db_client.init(config)
   override.restore_original()
   override.override(on_new_picker, on_entry_confirm)

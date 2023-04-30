@@ -14,7 +14,6 @@ M.reset = function()
   M.sorting_function_generator = nil
 end
 M.reset()
-M.has_picker = function()
-end
+M.has_picker = function() end
 
 return M

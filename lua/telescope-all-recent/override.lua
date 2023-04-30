@@ -1,17 +1,17 @@
-local telescope = require 'telescope'
-local sorters = require "telescope.sorters"
-local pickers = require "telescope.pickers"
-local action_state = require "telescope.actions.state"
-local actions = require "telescope.actions"
-local builtin = require 'telescope.builtin'
+local telescope = require("telescope")
+local sorters = require("telescope.sorters")
+local pickers = require("telescope.pickers")
+local action_state = require("telescope.actions.state")
+local actions = require("telescope.actions")
+local builtin = require("telescope.builtin")
 
-local cache = require 'telescope-all-recent.cache'
+local cache = require("telescope-all-recent.cache")
 
 local function iterate_extensions()
   local iter_table = {}
   for name, extension_table in pairs(telescope.extensions) do
     for method, _ in pairs(extension_table) do
-      local combi = name .. '#' .. method
+      local combi = name .. "#" .. method
       table.insert(iter_table, {
         name = name,
         method = method,
@@ -58,7 +58,6 @@ local function restore_original()
     builtin[k] = cache.original.builtin[k]
   end
 
-
   telescope.load_extension = cache.original.load_extension
   for _, ext in ipairs(iterate_extensions()) do
     telescope.extensions[ext.name][ext.method] = cache.original.extensions[ext.combi]
@@ -99,7 +98,7 @@ local function override_extensions()
   telescope.load_extension = function(name)
     local extension_table = cache.original.load_extension(name)
     for method, _ in pairs(extension_table) do
-      local combi = name .. '#' .. method
+      local combi = name .. "#" .. method
       -- back up original method and store new one
       cache.original.extensions[combi] = extension_table[method]
       extension_table[method] = generate_overide(combi)
@@ -161,5 +160,5 @@ end
 
 return {
   override = override,
-  restore_original = restore_original
+  restore_original = restore_original,
 }

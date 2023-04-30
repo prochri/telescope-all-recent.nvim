@@ -5,6 +5,17 @@ local override = require("telescope-all-recent.override")
 local default_config = require("telescope-all-recent.default")
 local config = default_config
 
+local function debug(...)
+  if not config.debug then
+    return
+  end
+  local printResult = ""
+  for _, v in ipairs({ ... }) do
+    printResult = printResult .. vim.inspect(v, { depth = 3 }) .. "\n"
+  end
+  vim.notify(printResult, vim.log.levels.INFO)
+end
+
 local function establish_picker_settings()
   local picker_info = cache.picker_info
   if type(picker_info.name) ~= "string" or not picker_info.object then
@@ -49,11 +60,12 @@ local function establish_picker_settings()
 end
 
 local on_new_picker = function()
+  debug("information about the started picker", cache.picker_info)
   establish_picker_settings()
   if not cache.picker then
     return
   end
-  -- TODO: inform user about picker config (with log level)
+  debug("deduced information about the started picker", cache.picker, cache.sorting)
 
   local ok, entry_scores = pcall(db_client.get_picker_scores, cache.picker, cache.sorting)
   if not ok then
@@ -84,7 +96,7 @@ local on_entry_confirm = function(value)
   if cache.picker then
     local ok, result = pcall(db_client.update_entry, cache.picker, value)
     if not ok then
-      vim.notify("Could not get save selected entry: " .. value .. ", error: " .. result, vim.log.levels.WARN)
+      vim.notify("Could not save selected entry: " .. value .. ", error: " .. result, vim.log.levels.WARN)
     end
     cache.reset()
   end
@@ -94,6 +106,7 @@ end
 local M = {}
 function M.setup(opts)
   config = vim.tbl_deep_extend("force", default_config, opts)
+  cache.config = config
   db_client.init(config)
   override.restore_original()
   override.override(on_new_picker, on_entry_confirm)
@@ -101,6 +114,15 @@ end
 
 function M.config()
   return config
+end
+
+function M.toggle_debug()
+  config.debug = not config.debug
+  if config.debug then
+    vim.notify("telescope-all-recent: debug mode enabled.", vim.log.levels.INFO)
+  else
+    vim.notify("telescope-all-recent: debug mode disabled", vim.log.levels.INFO)
+  end
 end
 
 return M

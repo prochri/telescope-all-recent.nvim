@@ -20,6 +20,7 @@ local default_config = {
     use_cwd = true,
     sorting = "recent",
   },
+  debug = false,
   -- does not make sense for:
   -- grep string
   -- live grep (too many results)

@@ -6,6 +6,7 @@ M.reset = function()
   M.picker_info.name = nil
   M.picker_info.object = nil
   M.picker_info.cwd = nil
+  M.picker_info.opts = nil
   M.picker = {}
   -- for LSP suggestions
   M.picker.name = nil

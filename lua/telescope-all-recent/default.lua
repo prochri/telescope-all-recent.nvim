@@ -87,6 +87,14 @@ local default_config = {
     search_history = { disable = true },
     current_buffer_fuzzy_find = { disable = true },
   },
+  -- support for telescope invoked through vim.ui.select, e.g. using dressing.nvim
+  -- Specify the kind.
+  -- Potentially fix to a specific prompt only.
+  -- Other than that, all options are the same as for normal pickers
+  vim_ui_select = {
+    kinds = {},
+    prompts = {},
+  },
 }
 
 return default_config

@@ -32,6 +32,8 @@ local function store_original()
   cache.original.picker_new = pickers._Picker.new
   cache.original.action_select_default = getmetatable(actions.select_default).__call
 
+  cache.original.vim_ui_select = vim.ui.select
+
   -- builtin
   cache.original.builtin = {}
   for k, v in pairs(builtin) do
@@ -53,6 +55,8 @@ local function restore_original()
   sorters.Sorter.new = cache.original.sorter_new
   pickers._Picker.new = cache.original.picker_new
   getmetatable(actions.select_default).__call = cache.original.action_select_default
+
+  vim.ui.select = cache.original.vim_ui_select
 
   for k, _ in pairs(builtin) do
     builtin[k] = cache.original.builtin[k]
@@ -95,6 +99,7 @@ local function override_extensions()
 
   -- override the load extension function
   -- the returned table is stored into the telescope.extension table. Modifying provides us with the wanted extension.
+  ---@diagnostic disable-next-line: duplicate-set-field
   telescope.load_extension = function(name)
     local extension_table = cache.original.load_extension(name)
     for method, _ in pairs(extension_table) do
@@ -113,6 +118,7 @@ local function override_picker_new(on_new_picker)
     local newPicker = cache.original.picker_new(self, opts)
     cache.picker_info.cwd = opts.cwd
     cache.picker_info.object = newPicker
+    cache.picker_info.opts = newPicker
     on_new_picker()
     if not cache.picker then
       return newPicker
@@ -149,6 +155,19 @@ local function override_action_select_default(on_entry_confirm)
   end
 end
 
+local function override_vim_ui_select()
+  ---@diagnostic disable-next-line: duplicate-set-field
+  vim.ui.select = function(items, opts, on_choice)
+    if cache.config.debug then
+      -- TODO: use normal debug
+      print("information from ui select")
+      p(opts)
+    end
+    cache.picker_info.vim_ui_select_opts = opts
+    return cache.original.vim_ui_select(items, opts, on_choice)
+  end
+end
+
 local function override(on_new_picker, on_entry_confirm)
   store_original()
   override_builtin()
@@ -156,6 +175,7 @@ local function override(on_new_picker, on_entry_confirm)
   override_picker_new(on_new_picker)
   override_sorter_new()
   override_action_select_default(on_entry_confirm)
+  override_vim_ui_select()
 end
 
 return {

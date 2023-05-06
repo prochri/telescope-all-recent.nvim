@@ -11,15 +11,69 @@ local function debug(...)
   end
   local printResult = ""
   for _, v in ipairs({ ... }) do
-    printResult = printResult .. vim.inspect(v, { depth = 3 }) .. "\n"
+    printResult = printResult .. vim.inspect(v, { depth = 2 }) .. "\n"
   end
   vim.notify(printResult, vim.log.levels.INFO)
 end
 
+local function get_config(cfg, value)
+  local config_value
+  if cfg and cfg[value] ~= nil then
+    config_value = cfg[value]
+  else
+    config_value = config.default[value]
+  end
+  if type(config_value) == "function" then
+    config_value = config_value(cache.picker_info)
+  end
+  return config_value
+end
+
+local function establish_vim_ui_select_settings()
+  -- TODO: refine the details. But this is enough to make it work
+  local select_opts = cache.picker_info.vim_ui_select_opts
+  local cfg = config.vim_ui_select.kinds[select_opts.kind]
+  local prompt = nil
+  if not cfg then
+    cfg = config.vim_ui_select.prompts[select_opts.prompt]
+    prompt = select_opts.prompt
+  end
+  if not cfg then
+    cache.reset()
+    return
+  end
+
+  -- filter out select kinds with not fitting prompts
+  if cfg.prompt and cfg.prompt ~= select_opts.prompt then
+    cache.reset()
+    return
+  end
+
+  local cwd = cache.picker_info.cwd
+  if get_config(cfg, "use_cwd") then
+    cwd = vim.fn.getcwd()
+  else
+    cwd = ""
+  end
+
+  -- for pickers found from the kind option, only inlcude prompt if explicitly set
+  if not prompt and cfg.name_include_prompt then
+    prompt = select_opts.prompt
+  end
+
+  local name = "vim_ui_select##" .. (select_opts.kind or "") .. "#" .. (select_opts.prompt or "")
+  cache.picker = { name = name, cwd = cwd }
+  cache.sorting = get_config(cfg, "sorting")
+end
+
 local function establish_picker_settings()
   local picker_info = cache.picker_info
-  if type(picker_info.name) ~= "string" or not picker_info.object then
+  if not picker_info.object then
     cache.reset()
+    return
+  end
+  if type(picker_info.name) ~= "string" then
+    establish_vim_ui_select_settings()
     return
   end
 
@@ -27,27 +81,18 @@ local function establish_picker_settings()
   local cwd = cache.picker_info.cwd
   -- disable option
   local picker_config = config.pickers[name]
-  local function get_config(value)
-    local config_value
-    if picker_config and picker_config[value] ~= nil then
-      config_value = picker_config[value]
-    else
-      config_value = config.default[value]
-    end
-    if type(config_value) == "function" then
-      config_value = config_value(cache.picker_info)
-    end
-    return config_value
+  local function get_cfg(value)
+    return get_config(picker_config, value)
   end
 
-  if get_config("disable") then
+  if get_cfg("disable") then
     cache.reset()
     return
   end
 
   -- cwd options
   if not cwd then
-    if get_config("use_cwd") then
+    if get_cfg("use_cwd") then
       cwd = vim.fn.getcwd()
     else
       cwd = ""
@@ -56,7 +101,7 @@ local function establish_picker_settings()
   cache.picker = { name = name, cwd = cwd }
 
   -- sorting options
-  cache.sorting = get_config("sorting")
+  cache.sorting = get_cfg("sorting")
 end
 
 local on_new_picker = function()

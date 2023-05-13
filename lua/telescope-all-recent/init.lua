@@ -135,7 +135,20 @@ local on_entry_confirm = function(value)
     cache.reset()
   end
 end
--- TODO: on telescope exit also reset the cache
+
+local function setup_telescope_leave_autocommand()
+  local telescope_all_recent_group = "telescope-all-recent"
+  vim.api.nvim_create_augroup(telescope_all_recent_group, {})
+  vim.api.nvim_create_autocmd("WinLeave", {
+    group = telescope_all_recent_group,
+    callback = function()
+      if vim.bo.filetype ~= "TelescopePrompt" then
+        return
+      end
+      cache.reset()
+    end,
+  })
+end
 
 local M = {}
 function M.setup(opts)
@@ -144,6 +157,7 @@ function M.setup(opts)
   db_client.init(config)
   override.restore_original()
   override.override(on_new_picker, on_entry_confirm)
+  setup_telescope_leave_autocommand()
 end
 
 function M.config()

@@ -20,7 +20,6 @@ local function get_config(cfg, value)
 end
 
 local function establish_vim_ui_select_settings()
-  -- TODO: refine the details. But this is enough to make it work
   local select_opts = cache.picker_info.vim_ui_select_opts
   local cfg = config.vim_ui_select.kinds[select_opts.kind]
   local prompt = nil
@@ -39,7 +38,7 @@ local function establish_vim_ui_select_settings()
     return
   end
 
-  local cwd = cache.picker_info.cwd
+  local cwd
   if get_config(cfg, "use_cwd") then
     cwd = vim.fn.getcwd()
   else
@@ -51,7 +50,7 @@ local function establish_vim_ui_select_settings()
     prompt = select_opts.prompt
   end
 
-  local name = "vim_ui_select##" .. (select_opts.kind or "") .. "#" .. (select_opts.prompt or "")
+  local name = "vim_ui_select##" .. (select_opts.kind or "") .. "#" .. (prompt or "")
   cache.picker = { name = name, cwd = cwd }
   cache.sorting = get_config(cfg, "sorting")
 end

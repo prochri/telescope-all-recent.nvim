@@ -60,21 +60,6 @@ There are two different sorting algorithms available. They can be set for each p
 - **recent**: show the most recently selected items first.
 - **frecent**: consider both the frequency and recency of the items (see [telescope-frecency.nvim](https://github.com/nvim-telescope/telescope-frecency.nvim))
 
-To use all-recent for a telescope extension, find out the extensions name and picker method,
-for example using `print(vim.inspect(require'telescope'.extensions))` and then add this in the plugins configuration:
-```lua
-{
-  pickers = {
-    // ...
-    ['extension_name#extension_method'] = {
-      disable = false,
-      use_cwd = false,
-      sorting = 'recent',
-    }
-  }
-}
-```
-
 If you want to change some settings or add pickers, here is how:
 
 ```lua
@@ -84,6 +69,7 @@ require'telescope-all-recent'.setup{
     file = "telescope-all-recent.sqlite3",
     max_timestamps = 10,
   },
+  debug = false,
   scoring = {
     recency_modifier = { -- also see telescope-frecency for these settings
       [1] = { age = 240, value = 100 }, -- past 4 hours
@@ -119,6 +105,64 @@ require'telescope-all-recent'.setup{
 
 The default config values can be found [here](./lua/telescope-all-recent/default.lua).
 
+### Telescope Extensions
+
+To use all-recent for a telescope extension, find out the extensions name and picker method,
+for example using `print(vim.inspect(require'telescope'.extensions))` and then add this in the plugins configuration:
+```lua
+{
+  pickers = {
+    // ...
+    ['extension_name#extension_method'] = {
+      disable = false,
+      use_cwd = false,
+      sorting = 'recent',
+    }
+  }
+}
+```
+
+### Telescope started from vim.ui.select
+
+Plugins like [dressing.nvim](https://github.com/stevearc/dressing.nvim#advanced-configuration)
+or [telescope-ui-select.nvim](https://github.com/nvim-telescope/telescope-ui-select.nvim)
+allow replacing `vim.ui.select` with a telescope picker.
+**Make sure to load telescope-all-recent.nvim after the `vim.ui.select` plugin in order for this to work!**
+
+To get sorting for those kind of pickers, first find out the `kind` or simply use the prompt displayed
+in the picker. You can then customize pickers like this:
+```lua
+{
+  -- [..]
+  vim_ui_select = {
+    kinds = {
+      overseer_template = {
+        use_cwd = true,
+        prompt = "Task template",
+        name_include_prompt = true,
+      },
+    }
+    -- used as fallback if no kind configuration is available
+    prompts = {
+      ["Load session"] = {
+      use_cwd = false,
+    }
+}
+```
+
+This example shows a picker used by [overseer.nvim](https://github.com/stevearc/overseer.nvim)
+and the use of a generic session plugin only setting the prompt to `Load session`.
+
+## Debugging
+
+To be able to see some internals and the deferred picker name, sorting and use of cwd,
+you can enable debug mode either in the settings or by calling:
+```vim
+:lua require'telescope-all-recent'.toggle_debug()
+```
+
+This will output information at log level `INFO` and `DEBUG` using `vim.notify`.
+
 ## How it works
 
 Telescope does not provide the relevant hooks/callback functions to build this nicely.
@@ -130,7 +174,6 @@ So, this plugin first stores some of the original functions and then overrides t
 - the `action.select_default.__call` allows us to see, which result is finally selected and add it to the database.
 
 All of this is done in [override.lua](./lua/telescope-all-recent/override.lua).
-  
 
 ## Inspiration
 

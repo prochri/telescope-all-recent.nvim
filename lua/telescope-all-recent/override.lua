@@ -6,6 +6,7 @@ local actions = require("telescope.actions")
 local builtin = require("telescope.builtin")
 
 local cache = require("telescope-all-recent.cache")
+local log = require("telescope-all-recent.log")
 
 local function iterate_extensions()
   local iter_table = {}
@@ -159,9 +160,7 @@ local function override_vim_ui_select()
   ---@diagnostic disable-next-line: duplicate-set-field
   vim.ui.select = function(items, opts, on_choice)
     if cache.config.debug then
-      -- TODO: use normal debug
-      print("information from ui select")
-      p(opts)
+      log.info("information from ui select", opts)
     end
     cache.picker_info.vim_ui_select_opts = opts
     return cache.original.vim_ui_select(items, opts, on_choice)

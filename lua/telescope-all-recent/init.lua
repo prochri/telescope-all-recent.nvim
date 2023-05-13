@@ -1,20 +1,10 @@
 local cache = require("telescope-all-recent.cache")
 local db_client = require("telescope-all-recent.frecency")
 local override = require("telescope-all-recent.override")
+local log = require("telescope-all-recent.log")
 
 local default_config = require("telescope-all-recent.default")
 local config = default_config
-
-local function debug(...)
-  if not config.debug then
-    return
-  end
-  local printResult = ""
-  for _, v in ipairs({ ... }) do
-    printResult = printResult .. vim.inspect(v, { depth = 2 }) .. "\n"
-  end
-  vim.notify(printResult, vim.log.levels.INFO)
-end
 
 local function get_config(cfg, value)
   local config_value
@@ -105,12 +95,12 @@ local function establish_picker_settings()
 end
 
 local on_new_picker = function()
-  debug("information about the started picker", cache.picker_info)
+  log.debug("information about the started picker", cache.picker_info)
   establish_picker_settings()
   if not cache.picker then
     return
   end
-  debug("deduced information about the started picker", cache.picker, cache.sorting)
+  log.info("deduced information about the started picker", cache.picker, cache.sorting)
 
   local ok, entry_scores = pcall(db_client.get_picker_scores, cache.picker, cache.sorting)
   if not ok then
@@ -164,9 +154,9 @@ end
 function M.toggle_debug()
   config.debug = not config.debug
   if config.debug then
-    vim.notify("telescope-all-recent: debug mode enabled.", vim.log.levels.INFO)
+    vim.notify("debug mode enabled", vim.log.levels.INFO, { title = "telescope-all-recent" })
   else
-    vim.notify("telescope-all-recent: debug mode disabled", vim.log.levels.INFO)
+    vim.notify("debug mode disabled", vim.log.levels.INFO, { title = "telescope-all-recent" })
   end
 end
 

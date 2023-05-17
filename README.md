@@ -139,6 +139,8 @@ in the picker. You can then customize pickers like this:
       overseer_template = {
         use_cwd = true,
         prompt = "Task template",
+        -- include the prompt in the picker name
+        -- helps differentiate between same picker kinds with different prompts
         name_include_prompt = true,
       },
     }

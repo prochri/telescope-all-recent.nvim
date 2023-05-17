@@ -21,6 +21,10 @@ end
 
 local function establish_vim_ui_select_settings()
   local select_opts = cache.picker_info.vim_ui_select_opts
+  if not select_opts then
+    cache.reset()
+    return
+  end
   local cfg = config.vim_ui_select.kinds[select_opts.kind]
   local prompt = nil
   if not cfg then

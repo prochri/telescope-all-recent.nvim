@@ -1,4 +1,5 @@
 M = {}
+local M = {}
 M.original = nil
 M.config = nil
 M.reset = function()

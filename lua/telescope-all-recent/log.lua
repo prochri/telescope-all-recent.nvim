@@ -1,8 +1,8 @@
 local M = {}
-local cache = require("telescope-all-recent.cache")
 local plugin_name = "telescope-all-recent.nvim"
 
 function M.log(level, ...)
+  local cache = require("telescope-all-recent.cache")
   if not cache.config.debug then
     return
   end

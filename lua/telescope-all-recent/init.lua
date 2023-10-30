@@ -22,7 +22,7 @@ end
 local function establish_vim_ui_select_settings()
   local select_opts = cache.picker_info.vim_ui_select_opts
   if not select_opts then
-    cache.reset()
+    cache.reset("no vim_ui_select_opts found")
     return
   end
   local cfg = config.vim_ui_select.kinds[select_opts.kind]
@@ -32,13 +32,18 @@ local function establish_vim_ui_select_settings()
     prompt = select_opts.prompt
   end
   if not cfg then
-    cache.reset()
+    cache.reset(
+      "no config found for vim_ui_select kind "
+        .. (select_opts.kind or "")
+        .. " or prompt "
+        .. (select_opts.prompt .. "")
+    )
     return
   end
 
   -- filter out select kinds with not fitting prompts
   if cfg.prompt and cfg.prompt ~= select_opts.prompt then
-    cache.reset()
+    cache.reset("requiered prompt does not match vim_ui_select prompt setting")
     return
   end
 
@@ -62,7 +67,7 @@ end
 local function establish_picker_settings()
   local picker_info = cache.picker_info
   if not picker_info.object then
-    cache.reset()
+    cache.reset("no picker object found")
     return
   end
   if type(picker_info.name) ~= "string" then
@@ -79,7 +84,7 @@ local function establish_picker_settings()
   end
 
   if get_cfg("disable") then
-    cache.reset()
+    cache.reset("picker is disabled by the config")
     return
   end
 
@@ -136,7 +141,7 @@ local on_entry_confirm = function(value)
     if not ok then
       vim.notify("Could not save selected entry: " .. value .. ", error: " .. result, vim.log.levels.WARN)
     end
-    cache.reset()
+    cache.reset("entry confirmed")
   end
 end
 
@@ -149,7 +154,7 @@ local function setup_telescope_leave_autocommand()
       if vim.bo.filetype ~= "TelescopePrompt" then
         return
       end
-      cache.reset()
+      cache.reset("telescope prompt closed")
     end,
   })
 end

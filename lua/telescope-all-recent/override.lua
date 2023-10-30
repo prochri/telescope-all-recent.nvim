@@ -124,7 +124,7 @@ local function override_picker_new(on_new_picker)
     if not cache.picker then
       return newPicker
     end
-    -- try injecting scoring function after
+    -- try injecting scoring function, if sorter was already created
     if newPicker.sorter then
       local old_scoring_function = newPicker.sorter.scoring_function
       newPicker.sorter.scoring_function = cache.sorting_function_generator(old_scoring_function)

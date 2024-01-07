@@ -1,37 +1,42 @@
 # telescope-all-recent.nvim
+
 (F)recency sorting for all [Telescope](https://github.com/nvim-telescope/telescope.nvim) pickers.
 
 ![demo](https://user-images.githubusercontent.com/38609485/210369490-98c0fecc-ad96-4efa-9360-55b012d70eb6.gif)
 
 Very hacky solution, overriding telescope internals to provide recency/frecency sorting for any picker.
 
-
 ## Requirements
 
 - [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim) (required)
 - [sqlite.lua](https://github.com/kkharji/sqlite.lua) (required)
+- [dressing.nvim](https://github.com/stevearc/dressing.nvim) (optional, for `vim.ui.select`, see [here](#telescope-started-from-vim.ui.select))
 
 Timestamps and selected records are stored in an [SQLite3](https://www.sqlite.org/index.html) database for persistence and speed and accessed via `sqlite.lua`.
 
 ## Installation
 
-Via [packer.nvim](https://github.com/wbthomason/packer.nvim):
+Via [lazy.nvim](https://github.com/folke/lazy.nvim)
 
 ```lua
-use {
+{
   'prochri/telescope-all-recent.nvim',
-  config = function()
-    require'telescope-all-recent'.setup{
+  dependencies = {
+    "nvim-telescope/telescope.nvim",
+    "kkharji/sqlite.lua",
+    -- optional, if using telescope for vim.ui.select
+    "stevearc/dressing.nvim"
+  }
+  opts =
+    {
       -- your config goes here
     }
-  end
 }
 ```
 
-Make sure to load this after telescope.
-
 If you are creating keybindings to telescope via lua functions,
 either load this plugin first and then bind the function, or wrap the call in another function (see [#2](https://github.com/prochri/telescope-all-recent.nvim/issues/2)):
+
 ```lua
 -- This may bind to old telescope function depending on your load order:
 -- vim.keymap.set('n', '<leader>f', require'telescope'.builtins.find_files)
@@ -41,8 +46,9 @@ vim.keymap.set('n', '<leader>f', function() require'telescope'.builtins.find_fil
 
 ## Configuration
 
-The default configuration should come with sane values, so you can get started right away! 
+The default configuration should come with sane values, so you can get started right away!
 The following builtin pickers are activated by default:
+
 - man_pages
 - vim_options
 - pickers
@@ -57,6 +63,7 @@ The following builtin pickers are activated by default:
 - git_branches
 
 There are two different sorting algorithms available. They can be set for each picker individually:
+
 - **recent**: show the most recently selected items first.
 - **frecent**: consider both the frequency and recency of the items (see [telescope-frecency.nvim](https://github.com/nvim-telescope/telescope-frecency.nvim))
 
@@ -109,6 +116,7 @@ The default config values can be found [here](./lua/telescope-all-recent/default
 
 To use all-recent for a telescope extension, find out the extensions name and picker method,
 for example using `print(vim.inspect(require'telescope'.extensions))` and then add this in the plugins configuration:
+
 ```lua
 {
   pickers = {
@@ -131,6 +139,7 @@ allow replacing `vim.ui.select` with a telescope picker.
 
 To get sorting for those kind of pickers, first find out the `kind` or simply use the prompt displayed
 in the picker. You can then customize pickers like this:
+
 ```lua
 {
   -- [..]
@@ -159,6 +168,7 @@ and the use of a generic session plugin only setting the prompt to `Load session
 
 To be able to see some internals and the deferred picker name, sorting and use of cwd,
 you can enable debug mode either in the settings or by calling:
+
 ```vim
 :lua require'telescope-all-recent'.toggle_debug()
 ```

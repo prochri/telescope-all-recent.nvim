@@ -26,7 +26,7 @@ Via [lazy.nvim](https://github.com/folke/lazy.nvim)
     "kkharji/sqlite.lua",
     -- optional, if using telescope for vim.ui.select
     "stevearc/dressing.nvim"
-  }
+  },
   opts =
     {
       -- your config goes here

@@ -17,6 +17,7 @@ local function reset()
   -- actually resetting here
   M.picker = nil
   M.sorting_function_generator = nil
+  M.new_picker_called = false
 end
 reset()
 function M.reset(reason)

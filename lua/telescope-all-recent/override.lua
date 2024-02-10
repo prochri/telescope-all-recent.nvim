@@ -4,9 +4,13 @@ local pickers = require("telescope.pickers")
 local action_state = require("telescope.actions.state")
 local actions = require("telescope.actions")
 local builtin = require("telescope.builtin")
+local state = require("telescope.state")
 
 local cache = require("telescope-all-recent.cache")
 local log = require("telescope-all-recent.log")
+
+local NO_PICKER_CALLED_MESSAGE =
+  "New picker was not called. No picker was opened. (Can happen in LSP definition/references)"
 
 local function iterate_extensions()
   local iter_table = {}
@@ -70,12 +74,20 @@ local function restore_original()
   cache.original = nil
 end
 
+local function reset_if_new_picker_not_called()
+  if not cache.new_picker_called then
+    cache.reset(NO_PICKER_CALLED_MESSAGE)
+  end
+end
+
 -- override builtin to cache name
 local function override_builtin()
   for k, _ in pairs(builtin) do
     builtin[k] = function(...)
       cache.picker_info.name = k
-      return cache.original.builtin[k](...)
+      local result = cache.original.builtin[k](...)
+      reset_if_new_picker_not_called()
+      return result
     end
   end
 end
@@ -90,7 +102,9 @@ local function override_extensions()
   local function generate_overide(combi)
     return function(...)
       cache.picker_info.name = combi
-      return cache.original.extensions[combi](...)
+      local result = cache.original.extensions[combi](...)
+      reset_if_new_picker_not_called()
+      return result
     end
   end
 
@@ -120,6 +134,7 @@ local function override_picker_new(on_new_picker)
     cache.picker_info.cwd = opts.cwd
     cache.picker_info.object = newPicker
     cache.picker_info.opts = newPicker
+    cache.new_picker_called = true
     on_new_picker()
     if not cache.picker then
       return newPicker

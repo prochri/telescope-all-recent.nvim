@@ -119,9 +119,12 @@ local function override_extensions()
     local extension_table = cache.original.load_extension(name)
     for method, _ in pairs(extension_table) do
       local combi = name .. "#" .. method
-      -- back up original method and store new one
-      cache.original.extensions[combi] = extension_table[method]
-      extension_table[method] = generate_overide(combi)
+      -- override if not already
+      if cache.original.extensions[combi] == nil then
+        -- back up original method and store new one
+        cache.original.extensions[combi] = extension_table[method]
+        extension_table[method] = generate_overide(combi)
+      end
     end
     return extension_table
   end

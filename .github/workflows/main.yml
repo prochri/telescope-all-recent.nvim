@@ -2,7 +2,7 @@ name: main
 
 on:
   push:
-    branches: [main]
+    branches: [main, test-plugin-template]
   pull_request:
     types: [opened, synchronize]
 

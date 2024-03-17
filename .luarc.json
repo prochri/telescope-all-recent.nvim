@@ -1,11 +1,8 @@
 {
-    "runtime.version": "LuaJIT",
-    "diagnostics.globals": [
-        "vim",
-        "MiniTest"
-    ],
-    "workspace.library": [
-        "/usr/local/share/nvim/runtime/lua",
-        ".ci/neovim/share/nvim/runtime/lua"
-    ]
+  "runtime.version": "LuaJIT",
+  "diagnostics.globals": ["vim", "MiniTest"],
+  "workspace.library": [
+    "/usr/local/share/nvim/runtime/lua",
+    ".ci/neovim/share/nvim/runtime/lua"
+  ]
 }

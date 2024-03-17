@@ -95,6 +95,9 @@ function calculate_score.frecency(frequency, timestamps)
 end
 
 local function update_entry(picker, value)
+  if not sql_wrapper then
+    return
+  end
   sql_wrapper:update_entry({
     value = value,
     picker = picker,
@@ -137,5 +140,4 @@ return {
   init = init,
   get_picker_scores = get_picker_scores,
   update_entry = update_entry,
-  validate = validate_db,
 }

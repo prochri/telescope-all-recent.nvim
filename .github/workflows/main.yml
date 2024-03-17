@@ -1,0 +1,120 @@
+name: main
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    types: [opened, synchronize]
+
+env:
+  LUA_LS_VERSION: 3.7.4
+
+concurrency:
+  group: github.head_ref
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    name: lint
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: JohnnyMorganz/stylua-action@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          version: latest
+          args: --check . -g '*.lua' -g '!deps/'
+
+  documentation:
+    runs-on: ubuntu-latest
+    name: documentation
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: setup neovim
+        uses: rhysd/action-setup-vim@v1
+        with:
+          neovim: true
+          version: v0.9.4
+
+      - name: generate documentation
+        run: make documentation-ci
+
+      - name: check docs diff
+        run: exit $(git status --porcelain doc | wc -l | tr -d " ")
+
+  tests:
+    needs:
+      - lint
+      - documentation
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    strategy:
+      matrix:
+        neovim_version: ["v0.7.2", "v0.8.3", "v0.9.5", "nightly"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - run: date +%F > todays-date
+
+      - name: restore cache for today's nightly.
+        uses: actions/cache@v4
+        with:
+          path: _neovim
+          key: ${{ runner.os }}-x64-${{ hashFiles('todays-date') }}
+
+      - name: restore luals cache
+        uses: actions/cache@v4
+        id: cache
+        with:
+          path: .ci/lua-ls
+          key: ${{ env.LUA_LS_VERSION }}
+
+      - name: setup luals
+        if: ${{ steps.cache.outputs.cache-hit != 'true' }}
+        run: mkdir -p .ci/lua-ls && curl -sL "https://github.com/LuaLS/lua-language-server/releases/download/${{ env.LUA_LS_VERSION }}/lua-language-server-${{ env.LUA_LS_VERSION }}-linux-x64.tar.gz" | tar xzf - -C "${PWD}/.ci/lua-ls"
+
+      - name: setup neovim
+        uses: rhysd/action-setup-vim@v1
+        with:
+          neovim: true
+          version: ${{ matrix.neovim_version }}
+
+      - name: run luals
+        run: |
+          export PATH="${PWD}/.ci/lua-ls/bin:${PATH}"
+          nvim --version
+          make luals-ci
+
+      - name: run tests
+        run: make test-ci
+
+  # release:
+  #   name: release
+  #   if: ${{ github.ref == 'refs/heads/main' }}
+  #   needs:
+  #     - tests
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #
+  #     - uses: google-github-actions/release-please-action@v3
+  #       id: release
+  #       with:
+  #         release-type: simple
+  #         package-name: telescope-all-recent.nvim
+  #
+  #     - name: tag stable versions
+  #       if: ${{ steps.release.outputs.release_created }}
+  #       run: |
+  #         git config user.name github-actions[bot]
+  #         git config user.email github-actions[bot]@users.noreply.github.com
+  #         git remote add gh-token "https://${{ secrets.GITHUB_TOKEN }}@github.com/google-github-actions/release-please-action.git"
+  #         git tag -d stable || true
+  #         git push origin :stable || true
+  #         git tag -a stable -m "Last Stable Release"
+  #         git push origin stable

@@ -24,6 +24,7 @@ test-0.8.3:
 deps:
 	@mkdir -p deps
 	git clone --depth 1 https://github.com/echasnovski/mini.nvim deps/mini.nvim
+	git clone --depth 1 https://github.com/kkharji/sqlite.lua deps/sqlite.lua
 
 # installs deps before running tests, useful for the CI.
 test-ci: deps test

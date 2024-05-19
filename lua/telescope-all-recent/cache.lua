@@ -1,19 +1,27 @@
 local log = require("telescope-all-recent.log")
+---@class AllRecentCache.PickerInfo
+---@field name string
+---@field object any
+---@field cwd string
+---@field opts any
+---@field vim_ui_select_opts any
+
+---@class AllRecentCache.Picker
+---@field name string
+---@field cwd string
+
+---@class AllRecentCache
+---@field original any
+---@field config AllRecentConfig
+---@field picker_info AllRecentCache.PickerInfo
+---@field picker AllRecentCache.Picker
+---@field new_picker_called boolean
+---@field sorting AllRecentSortingStrategyEnum
+---@field sorting_function_generator function
 local M = {}
 M.original = nil
 M.config = nil
 local function reset()
-  -- for LSP suggestions
-  M.picker_info = {}
-  M.picker_info.name = nil
-  M.picker_info.object = nil
-  M.picker_info.cwd = nil
-  M.picker_info.opts = nil
-  M.picker_info.vim_ui_select_opts = nil
-  M.picker_info = {}
-  M.picker = {}
-  M.picker.name = nil
-  M.picker.cwd = nil
   -- actually resetting here
   M.picker = nil
   M.sorting_function_generator = nil

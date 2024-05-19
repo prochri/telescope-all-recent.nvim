@@ -1,10 +1,15 @@
 package.loaded["telescope-all-recent.sql_wrapper"] = nil
 local sqlwrap = require("telescope-all-recent.sql_wrapper")
--- local scandir                                      = require("plenary.scandir").scan_dir
+local log = require("telescope-all-recent.log")
 
 local MAX_TIMESTAMPS = 10
 
+---@class AllRecentRecencyModifier
+---@field age number -- age in minutes
+---@field value number -- the score to apply to this age
+
 -- modifier used as a weight in the recency_score calculation:
+---@type AllRecentRecencyModifier[]
 local recency_modifier = {
   [1] = { age = 240, value = 100 }, -- past 4 hours
   [2] = { age = 1440, value = 80 }, -- past day
@@ -17,44 +22,6 @@ local recency_modifier = {
 local sql_wrapper = nil
 
 -- TODO: rewrite and actually validate the db at some point
-
--- local DB_REMOVE_SAFETY_THRESHOLD = 10
--- local function validate_db(safe_mode)
---   if not sql_wrapper then return {} end
-
---   local queries = sql_wrapper.queries
---   local files = sql_wrapper:do_transaction(queries.file_get_entries, {})
---   local pending_remove = {}
-
---   local confirmed = false
---   if not safe_mode then
---     confirmed = true
---   elseif #pending_remove > DB_REMOVE_SAFETY_THRESHOLD then
---     -- don't allow removal of >N values from DB without confirmation
---     local user_response = vim.fn.confirm("Telescope-Frecency: remove " ..
---       #pending_remove .. " entries from SQLite3 database?", "&Yes\n&No", 2)
---     if user_response == 1 then
---       confirmed = true
---     else
---       vim.defer_fn(function() vim.notify("TelescopeFrecency: validation aborted.") end, 50)
---     end
---   else
---     confirmed = true
---   end
-
---   if #pending_remove > 0 then
---     if confirmed == true then
---       for _, entry in pairs(pending_remove) do
---         -- remove entries from file and timestamp tables
---         sql_wrapper:do_transaction(queries.file_delete_entry, { where = { id = entry.id } })
---         sql_wrapper:do_transaction(queries.timestamp_delete_entry, { where = { file_id = entry.id } })
---       end
---       vim.notify(('Telescope-Frecency: removed %d missing entries.'):format(#pending_remove))
---     else
---       vim.notify("Telescope-Frecency: validation aborted.")
---     end
---   end
--- end
 
 local function init(config)
   if sql_wrapper then
@@ -95,6 +62,10 @@ function calculate_score.frecency(frequency, timestamps)
 end
 
 local function update_entry(picker, value)
+  if not sql_wrapper then
+    log.warn("SQL wrapper not initialized")
+    return
+  end
   sql_wrapper:update_entry({
     value = value,
     picker = picker,
@@ -137,5 +108,4 @@ return {
   init = init,
   get_picker_scores = get_picker_scores,
   update_entry = update_entry,
-  validate = validate_db,
 }

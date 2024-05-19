@@ -1,6 +1,44 @@
+---@class AllRecentConfig.Database
+---@field folder string
+---@field file string
+---@field max_timestamps number
+
+---@alias AllRecentSortingStrategyEnum "recent" | "frecency"
+
+---@class AllRecentConfig.PickerSettings
+---@field disable? bool
+---@field use_cwd? bool
+---@field sorting? AllRecentSortingStrategyEnum
+
+---@class AllRecentConfig.KindSettings.Extra
+---@field name_include_prompt? bool
+---@field prompt? string
+
+---@alias AllRecentConfig.KindSettings AllRecentConfig.PickerSettings | AllRecentConfig.KindSettings.Extra
+
+---@class AllRecentConfig.VimUiSelectSettings
+---@field kinds table<string, AllRecentConfig.KindSettings>
+---@field prompts table<string, AllRecentConfig.PickerSettings>
+
+---@class AllRecentConfig
+---@field database AllRecentConfig.Database
+---@field scoring { recency_modifier: AllRecentRecencyModifier[], boost_factor: number }
+---@field default AllRecentConfig.PickerSettings
+---@field debug bool
+---@field pickers table<string, AllRecentConfig.PickerSettings> TODO: make the types dependent on telescope builtins
+---@field vim_ui_select AllRecentConfig.VimUiSelectSettings
+
+local stdpath_data = vim.fn.stdpath("data")
+if type(stdpath_data) ~= "string" and vim.isarray(stdpath_data) then
+  stdpath_data = stdpath_data[1]
+end
+---@cast stdpath_data string
+local data_folder = stdpath_data
+
+---@type AllRecentConfig
 local default_config = {
   database = {
-    folder = vim.fn.stdpath("data"),
+    folder = data_folder,
     file = "telescope-all-recent.sqlite3",
     max_timestamps = 10,
   },

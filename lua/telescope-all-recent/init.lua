@@ -160,6 +160,7 @@ local function setup_telescope_leave_autocommand()
 end
 
 local M = {}
+---@param opts AllRecentConfig
 function M.setup(opts)
   config = vim.tbl_deep_extend("force", default_config, opts)
   cache.config = config

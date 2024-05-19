@@ -23,7 +23,8 @@ M.original = nil
 M.config = nil
 local function reset()
   -- actually resetting here
-  M.picker = nil
+  M.picker = {}
+  M.picker_info = {}
   M.sorting_function_generator = nil
   M.new_picker_called = false
 end

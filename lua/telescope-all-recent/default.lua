@@ -24,8 +24,8 @@
 ---@field database AllRecentConfig.Database
 ---@field scoring { recency_modifier: AllRecentRecencyModifier[], boost_factor: number }
 ---@field default AllRecentConfig.PickerSettings
----@field debug boolean
----@field pickers table<string, AllRecentConfig.PickerSettings> TODO: make the types dependent on telescope builtins
+---@field debug bool
+---@field pickers table<string, AllRecentConfig.PickerSettings>
 ---@field vim_ui_select AllRecentConfig.VimUiSelectSettings
 
 local stdpath_data = vim.fn.stdpath("data")

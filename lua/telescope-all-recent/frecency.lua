@@ -23,6 +23,7 @@ local sql_wrapper = nil
 
 -- TODO: rewrite and actually validate the db at some point
 
+---@param config AllRecentConfig
 local function init(config)
   if sql_wrapper then
     return
@@ -36,6 +37,10 @@ local function init(config)
   -- end
 end
 
+---@class AllRecentTimestamp
+---@field age number
+
+---@type table<AllRecentSortingStrategyEnum, fun(frequency: integer, timestamps: AllRecentTimestamp[]):number>
 local calculate_score = {}
 function calculate_score.recent(_, timestamps)
   local min_age = nil
@@ -72,12 +77,15 @@ local function update_entry(picker, value)
   })
 end
 
+---@param picker AllRecentCache.Picker
+---@param sorting AllRecentSortingStrategyEnum
 local function get_picker_scores(picker, sorting)
   if not sql_wrapper then
     return {}
   end
   local entries = sql_wrapper:get_picker_entries(picker)
 
+  ---@type { entry : AllRecent, score : number }[]
   local scores = {}
   for _, entry in ipairs(entries) do
     local score = entry.count == 0 and 0 or calculate_score[sorting](entry.count, entry.timestamps)

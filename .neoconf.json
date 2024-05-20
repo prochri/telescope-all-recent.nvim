@@ -1,0 +1,13 @@
+{
+  "neodev": {
+    "library": {
+      "plugins": ["telescope.nvim", "sqlite.lua"]
+    }
+  },
+  "lspconfig": {
+    "sumneko_lua": {
+      "Lua.runtime.version": "LuaJIT",
+      "Lua.workspace.checkThirdParty": false
+    }
+  }
+}

@@ -4,7 +4,6 @@ local pickers = require("telescope.pickers")
 local action_state = require("telescope.actions.state")
 local actions = require("telescope.actions")
 local builtin = require("telescope.builtin")
-local state = require("telescope.state")
 
 local cache = require("telescope-all-recent.cache")
 local log = require("telescope-all-recent.log")
@@ -13,6 +12,7 @@ local NO_PICKER_CALLED_MESSAGE =
   "New picker was not called. No picker was opened. (Can happen in LSP definition/references)"
 
 local function iterate_extensions()
+  ---@type { name: string, method: string, combi: string }[]
   local iter_table = {}
   for name, extension_table in pairs(telescope.extensions) do
     for method, _ in pairs(extension_table) do
@@ -130,6 +130,7 @@ local function override_extensions()
   end
 end
 
+---@param on_new_picker fun():void
 local function override_picker_new(on_new_picker)
   ---@diagnostic disable-next-line: duplicate-set-field
   pickers._Picker.new = function(self, opts)

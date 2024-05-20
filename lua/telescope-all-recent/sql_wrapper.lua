@@ -14,8 +14,10 @@ db_table.pickers = "pickers"
 db_table.entries = "entries"
 db_table.timestamps = "timestamps"
 
+---@class SQLWrapper
 local M = {}
 
+---@return SQLWrapper
 function M:new()
   local o = {}
   setmetatable(o, self)
@@ -25,6 +27,7 @@ function M:new()
   return o
 end
 
+---@param db_config AllRecentConfig.Database
 function M:bootstrap(db_config)
   if self.db then
     return
@@ -67,8 +70,6 @@ function M:bootstrap(db_config)
   self.db:close()
   return first_run
 end
-
---
 
 function M:do_transaction(t, params)
   return self.db:with_open(function(db)
@@ -157,8 +158,7 @@ local queries = {
 
 M.queries = queries
 
---
-
+---@return number | nil
 local function row_id(entry)
   return (not vim.tbl_isempty(entry)) and entry[1].id or nil
 end
@@ -216,11 +216,13 @@ function M:trim_timestamps(entry_id)
   end
 end
 
+---@param picker AllRecentCache.Picker
 function M:get_picker_entries(picker)
   local picker_id = row_id(self:do_transaction(queries.pickers.get, { where = picker }))
   if not picker_id then
     return {}
   end
+  ---@type { id: number, value: string, count: number, timestamps: {} }[]
   local entries = self:do_transaction(queries.entries.get, { where = { picker_id = picker_id } })
   -- TODO: get timestamps directly via SQL query, maybe via group by
   for _, entry in ipairs(entries) do

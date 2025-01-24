@@ -6,12 +6,12 @@
 ---@alias AllRecentSortingStrategyEnum "recent" | "frecency"
 
 ---@class AllRecentConfig.PickerSettings
----@field disable? bool
----@field use_cwd? bool
+---@field disable? boolean
+---@field use_cwd? boolean
 ---@field sorting? AllRecentSortingStrategyEnum
 
 ---@class AllRecentConfig.KindSettings.Extra
----@field name_include_prompt? bool
+---@field name_include_prompt? boolean
 ---@field prompt? string
 
 ---@alias AllRecentConfig.KindSettings AllRecentConfig.PickerSettings | AllRecentConfig.KindSettings.Extra
@@ -24,7 +24,7 @@
 ---@field database AllRecentConfig.Database
 ---@field scoring { recency_modifier: AllRecentRecencyModifier[], boost_factor: number }
 ---@field default AllRecentConfig.PickerSettings
----@field debug bool
+---@field debug boolean
 ---@field pickers table<string, AllRecentConfig.PickerSettings> TODO: make the types dependent on telescope builtins
 ---@field vim_ui_select AllRecentConfig.VimUiSelectSettings
 

@@ -135,16 +135,6 @@ local on_new_picker = function()
   end
 end
 
-local on_entry_confirm = function(value)
-  if cache.picker then
-    local ok, result = pcall(db_client.update_entry, cache.picker, value)
-    if not ok then
-      vim.notify("Could not save selected entry: " .. value .. ", error: " .. result, vim.log.levels.WARN)
-    end
-    cache.reset("entry confirmed")
-  end
-end
-
 local function setup_telescope_leave_autocommand()
   local telescope_all_recent_group = "telescope-all-recent"
   vim.api.nvim_create_augroup(telescope_all_recent_group, {})
@@ -160,13 +150,24 @@ local function setup_telescope_leave_autocommand()
 end
 
 local M = {}
+
+M.on_entry_confirm = function(value)
+  if cache.picker then
+    local ok, result = pcall(db_client.update_entry, cache.picker, value)
+    if not ok then
+      vim.notify("Could not save selected entry: " .. value .. ", error: " .. result, vim.log.levels.WARN)
+    end
+    cache.reset("entry confirmed")
+  end
+end
+
 ---@param opts AllRecentConfig
 function M.setup(opts)
   config = vim.tbl_deep_extend("force", default_config, opts)
   cache.config = config
   db_client.init(config)
   override.restore_original()
-  override.override(on_new_picker, on_entry_confirm)
+  override.override(on_new_picker, M.on_entry_confirm)
   setup_telescope_leave_autocommand()
 end
 

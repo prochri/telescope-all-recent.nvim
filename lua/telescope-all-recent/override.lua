@@ -6,6 +6,14 @@ local actions = require("telescope.actions")
 local builtin = require("telescope.builtin")
 local state = require("telescope.state")
 
+local actions_to_override = {
+  "select_horizontal",
+  "select_vertical",
+  "select_tab",
+  "select_drop",
+  "select_tab_drop",
+  "select_default",
+}
 local cache = require("telescope-all-recent.cache")
 local log = require("telescope-all-recent.log")
 
@@ -35,7 +43,9 @@ local function store_original()
   cache.original = {}
   cache.original.sorter_new = sorters.Sorter.new
   cache.original.picker_new = pickers._Picker.new
-  cache.original.action_select_default = getmetatable(actions.select_default).__call
+  for _, name in ipairs(actions_to_override) do
+    cache.original["action_" .. name] = getmetatable(actions[name]).__call
+  end
 
   cache.original.vim_ui_select = vim.ui.select
 
@@ -59,7 +69,9 @@ local function restore_original()
   end
   sorters.Sorter.new = cache.original.sorter_new
   pickers._Picker.new = cache.original.picker_new
-  getmetatable(actions.select_default).__call = cache.original.action_select_default
+  for _, name in ipairs(actions_to_override) do
+    getmetatable(actions[name]).__call = cache.original["action_" .. name]
+  end
 
   vim.ui.select = cache.original.vim_ui_select
 
@@ -164,13 +176,15 @@ local function override_sorter_new()
   end
 end
 
-local function override_action_select_default(on_entry_confirm)
-  getmetatable(actions.select_default).__call = function(self, prompt_bufnr)
-    local entry = action_state.get_selected_entry()
-    if type(entry) == "table" then
-      on_entry_confirm(entry.ordinal)
+local function override_action(on_entry_confirm)
+  for _, name in ipairs(actions_to_override) do
+    getmetatable(actions[name]).__call = function(self, prompt_bufnr)
+      local entry = action_state.get_selected_entry()
+      if type(entry) == "table" then
+        on_entry_confirm(entry.ordinal)
+      end
+      return cache.original["action_" .. name](self, prompt_bufnr)
     end
-    return cache.original.action_select_default(self, prompt_bufnr)
   end
 end
 
@@ -191,7 +205,7 @@ local function override(on_new_picker, on_entry_confirm)
   override_extensions()
   override_picker_new(on_new_picker)
   override_sorter_new()
-  override_action_select_default(on_entry_confirm)
+  override_action(on_entry_confirm)
   override_vim_ui_select()
 end
 
